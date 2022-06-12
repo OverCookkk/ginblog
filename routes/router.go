@@ -5,22 +5,46 @@ import (
 	"ginblog/middleware"
 	"ginblog/utils"
 
+	"github.com/gin-contrib/multitemplate"
 	"github.com/gin-gonic/gin"
 )
 
+func createMyRender() multitemplate.Renderer {
+	p := multitemplate.NewRenderer()
+	p.AddFromFiles("admin", "web/admin/dist/index.html")
+	p.AddFromFiles("front", "web/front/dist/index.html")
+	return p
+}
+
 func InitRouter() {
 	gin.SetMode(utils.AppNode)
-	r := gin.Default()
+	// r := gin.Default()
+	r := gin.New()
+	r.HTMLRender = createMyRender()
+	// 使用的中间件
+	r.Use(gin.Recovery())
+	r.Use(middleware.Logger())
+	r.Use(middleware.Cors())
 
+	// 加载前端静态文件
+	r.Static("/static", "./web/front/dist/static")
+	r.Static("/admin", "./web/admin/dist")
+	r.StaticFile("/favicon.ico", "/web/front/dist/favicon.ico")
+
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(200, "front", nil)
+	})
+
+	r.GET("/admin", func(c *gin.Context) {
+		c.HTML(200, "admin", nil)
+	})
+
+	/*
+		后台管理路由接口
+	*/
 	auth := r.Group("api/v1")
 	auth.Use(middleware.JwtToken()) // 加入中间件，以下接口需要有权限才能使用（token正确才能调用）
 	{
-		// router.GET("hello", func(ctx *gin.Context) {
-		// 	ctx.JSON(http.StatusOK, gin.H{
-		// 		"msg": "ok",
-		// 	})
-		// })
-
 		// 用户模块的路由接口
 		auth.PUT("user/:id", v1.EditUser)
 		auth.DELETE("user/:id", v1.DeleteUser)
@@ -32,7 +56,13 @@ func InitRouter() {
 		auth.POST("article/add", v1.AddArticle)
 		auth.PUT("article/:id", v1.EditArticle)
 		auth.DELETE("article/:id", v1.DeleteArticle)
+		// 上传文件
+		auth.POST("upload", v1.UpLoad)
 	}
+
+	/*
+		前端展示页面接口
+	*/
 	router := r.Group("api/v1")
 	{
 		router.POST("user/add", v1.AddUser)
