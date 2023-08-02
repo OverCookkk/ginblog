@@ -3,6 +3,7 @@ package routes
 import (
 	v1 "ginblog/api/v1"
 	"ginblog/middleware"
+	"ginblog/model"
 	"ginblog/utils"
 
 	"github.com/gin-contrib/multitemplate"
@@ -43,7 +44,8 @@ func InitRouter() {
 		后台管理路由接口
 	*/
 	auth := r.Group("api/v1")
-	auth.Use(middleware.JwtToken()) // 加入中间件，以下接口需要有权限才能使用（token正确才能调用）
+	model.Casbin()                                                  // 初始化
+	auth.Use(middleware.JwtToken()).Use(middleware.CasbinHandler()) // 加入中间件，以下接口需要有权限才能使用（token正确才能调用）
 	{
 		// 用户模块的路由接口
 		auth.PUT("user/:id", v1.EditUser)
@@ -72,6 +74,10 @@ func InitRouter() {
 		router.GET("articles/list/:id", v1.GetCateArt)
 		router.GET("articles/info/:id", v1.GetSingleArticle)
 		router.POST("login", v1.Login)
+		// 权限相关路由
+		router.POST("addPolicy", v1.UpdateCasbin)
+		router.POST("addRoleUser", v1.UpdateGroupCasbin)
+		router.DELETE("deleteRoleForUser", v1.DeleteRoleForUser)
 	}
 	r.Run(utils.HttpPort)
 }

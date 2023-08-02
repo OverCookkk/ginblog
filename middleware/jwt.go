@@ -24,7 +24,7 @@ func BuildToken(username string) (string, int) {
 
 	// 参数
 	SetClaims := MyClaims{
-		Username: "username",
+		Username: username,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expireTime.Unix(),
 			Issuer:    "ginblog",
@@ -33,7 +33,7 @@ func BuildToken(username string) (string, int) {
 
 	//
 	reqClaim := jwt.NewWithClaims(jwt.SigningMethodHS256, SetClaims)
-	token, err := reqClaim.SignedString(JwtKey) //加盐，转换成string
+	token, err := reqClaim.SignedString(JwtKey) // 加盐，转换成string
 	if err != nil {
 		return "", errmsg.ERROR
 	}
@@ -88,6 +88,7 @@ func JwtToken() gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
+		// token已过期
 		if time.Now().Unix() > key.ExpiresAt {
 			code = errmsg.ERROR_TOKEN_RUNTIME
 			ctx.JSON(http.StatusOK, gin.H{

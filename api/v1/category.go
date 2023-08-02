@@ -20,6 +20,7 @@ func AddCategory(c *gin.Context) {
 	}
 	code = model.CheckCategory(data.Name)
 	if code == errmsg.SUCCSE {
+		// TODO:返回值需要处理
 		model.CreateCategory(&data)
 	}
 	if code == errmsg.ERROR_CATENAME_USER {
