@@ -2,6 +2,7 @@ package v1
 
 import (
 	"ginblog/model"
+	"ginblog/model/common"
 	"ginblog/utils/errmsg"
 	"net/http"
 	"strconv"
@@ -18,11 +19,12 @@ func AddArticle(c *gin.Context) {
 	}
 	code := model.CreateArticle(&data)
 
-	c.JSON(http.StatusOK, gin.H{
-		"status":  code,
-		"data":    data,
-		"message": errmsg.GetErrMsg(code),
-	})
+	response.ReturnWithDetailed(code, data, errmsg.GetErrMsg(code), c)
+	// c.JSON(http.StatusOK, gin.H{
+	// 	"status":  code,
+	// 	"data":    data,
+	// 	"message": errmsg.GetErrMsg(code),
+	// })
 }
 
 // 查询分类下的所有文章
@@ -37,6 +39,7 @@ func GetCateArt(c *gin.Context) {
 		pageNum = -1
 	}
 	data, code, total := model.GetCateArt(ID, pageSize, pageNum)
+	// response.ReturnWithDetailed(code, data, errmsg.GetErrMsg(code), c)
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,
 		"data":    data,
@@ -49,11 +52,7 @@ func GetCateArt(c *gin.Context) {
 func GetSingleArticle(c *gin.Context) {
 	ID, _ := strconv.Atoi(c.Param("id"))
 	data, code := model.GetSingleArticle(ID)
-	c.JSON(http.StatusOK, gin.H{
-		"status":  code,
-		"data":    data,
-		"message": errmsg.GetErrMsg(code),
-	})
+	response.ReturnWithDetailed(code, data, errmsg.GetErrMsg(code), c)
 }
 
 // 查询文章列表
@@ -81,18 +80,12 @@ func EditArticle(c *gin.Context) {
 	ID, _ := strconv.Atoi(c.Param("id"))
 	c.ShouldBindJSON(&data)
 	code := model.EditArticle(ID, &data)
-	c.JSON(http.StatusOK, gin.H{
-		"status":  code,
-		"message": errmsg.GetErrMsg(code),
-	})
+	response.ReturnWithMessage(code, errmsg.GetErrMsg(code), c)
 }
 
 // 删除文章
 func DeleteArticle(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	code := model.DeleteArticle(id)
-	c.JSON(http.StatusOK, gin.H{
-		"status":  code,
-		"message": errmsg.GetErrMsg(code),
-	})
+	response.ReturnWithMessage(code, errmsg.GetErrMsg(code), c)
 }

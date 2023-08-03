@@ -2,6 +2,7 @@ package v1
 
 import (
 	"ginblog/model"
+	response "ginblog/model/common"
 	"ginblog/utils/errmsg"
 	"ginblog/utils/validator"
 	"net/http"
@@ -10,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var code int
+// var code int
 
 // 查询用户是否存在
 func UserExist(c *gin.Context) {
@@ -20,31 +21,22 @@ func UserExist(c *gin.Context) {
 // 添加用户
 func AddUser(c *gin.Context) {
 	var data model.User
-	var msg string
 	err := c.ShouldBindJSON(&data)
 	if err != nil {
 		return
 	}
 	msg, code := validator.Validate(&data)
 	if code != errmsg.SUCCSE {
-		c.JSON(http.StatusOK, gin.H{
-			"status":  code,
-			"message": msg,
-		})
+		response.ReturnWithMessage(code, msg, c)
 		return
 	}
 	code = model.CheckUser(data.Username)
 	if code == errmsg.SUCCSE {
-		model.CreateUser(&data)
-	}
-	if code == errmsg.ERROR_USERNAME_USER {
+		code = model.CreateUser(&data)
+	} else if code == errmsg.ERROR_USERNAME_USER {
 		code = errmsg.ERROR_USERNAME_USER
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"status":  code,
-		"data":    data,
-		"message": errmsg.GetErrMsg(code),
-	})
+	response.ReturnWithDetailed(code, data, errmsg.GetErrMsg(code), c)
 }
 
 // 查询单个用户
@@ -60,7 +52,7 @@ func GetUsers(c *gin.Context) {
 		pageNum = -1
 	}
 	data, total := model.GetUsers(pageSize, pageNum)
-	code = errmsg.SUCCSE
+	code := errmsg.SUCCSE
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,
 		"data":    data,
@@ -91,8 +83,5 @@ func EditUser(c *gin.Context) {
 func DeleteUser(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	code := model.DeleteUser(id)
-	c.JSON(http.StatusOK, gin.H{
-		"status":  code,
-		"message": errmsg.GetErrMsg(code),
-	})
+	response.ReturnWithMessage(code, errmsg.GetErrMsg(code), c)
 }

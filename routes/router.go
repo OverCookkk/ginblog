@@ -75,8 +75,8 @@ func InitRouter() {
 		router.GET("articles/info/:id", v1.GetSingleArticle)
 		router.POST("login", v1.Login)
 		// 权限相关路由
-		router.POST("addPolicy", v1.UpdateCasbin)
-		router.POST("addRoleUser", v1.UpdateGroupCasbin)
+		router.POST("addPolicy", v1.AddPolicy)
+		router.POST("addGroupingPolicy", v1.AddGroupingPolicy)
 		router.DELETE("deleteRoleForUser", v1.DeleteRoleForUser)
 	}
 	r.Run(utils.HttpPort)

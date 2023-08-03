@@ -2,6 +2,7 @@ package v1
 
 import (
 	"ginblog/model"
+	response "ginblog/model/common"
 	"ginblog/utils/errmsg"
 	"net/http"
 	"strconv"
@@ -18,19 +19,11 @@ func AddCategory(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	code = model.CheckCategory(data.Name)
+	code := model.CheckCategory(data.Name)
 	if code == errmsg.SUCCSE {
-		// TODO:返回值需要处理
-		model.CreateCategory(&data)
+		code = model.CreateCategory(&data)
 	}
-	if code == errmsg.ERROR_CATENAME_USER {
-		code = errmsg.ERROR_CATENAME_USER
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"status":  code,
-		"data":    data,
-		"message": errmsg.GetErrMsg(code),
-	})
+	response.ReturnWithMessage(code, errmsg.GetErrMsg(code), c)
 }
 
 // 查询单个分类下的文章
@@ -46,7 +39,7 @@ func GetCategory(c *gin.Context) {
 		pageNum = -1
 	}
 	data, total := model.GetCategorys(pageSize, pageNum)
-	code = errmsg.SUCCSE
+	code := errmsg.SUCCSE
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,
 		"data":    data,
@@ -67,18 +60,12 @@ func EditCategory(c *gin.Context) {
 	if code == errmsg.ERROR_CATENAME_USER {
 		c.Abort()
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"status":  code,
-		"message": errmsg.GetErrMsg(code),
-	})
+	response.ReturnWithMessage(code, errmsg.GetErrMsg(code), c)
 }
 
 // 删除分类
 func DeleteCategory(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	code := model.DeleteCategory(id)
-	c.JSON(http.StatusOK, gin.H{
-		"status":  code,
-		"message": errmsg.GetErrMsg(code),
-	})
+	response.ReturnWithMessage(code, errmsg.GetErrMsg(code), c)
 }

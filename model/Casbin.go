@@ -1,7 +1,6 @@
 package model
 
 import (
-	"errors"
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/model"
 	gormadapter "github.com/casbin/gorm-adapter/v3"
@@ -21,33 +20,33 @@ type CasbinInReceive struct {
 	CasbinInfos   []CasbinInfo `json:"casbinInfos"`
 }
 
-func UpdateCasbin(AuthorityName string, casbinInfos []CasbinInfo) error {
+func AddPolicy(AuthorityName string, casbinInfos []CasbinInfo) error {
 	rules := [][]string{}
 	for _, casbinInfo := range casbinInfos {
 		rules = append(rules, []string{AuthorityName, casbinInfo.Path, casbinInfo.Method})
 	}
 	e := Casbin()
-	success, _ := e.AddPolicy(rules)
+	success, err := e.AddPolicy(rules)
 	if !success {
-		return errors.New("存在相同api,添加失败,请联系管理员")
+		return err
 	}
 	return nil
 }
 
-func UpdateGroupCasbin(AuthorityName string, Group string) error {
+func AddGroupingPolicy(AuthorityName string, Group string) error {
 	e := Casbin()
-	success, _ := e.AddGroupingPolicy(AuthorityName, Group)
+	success, err := e.AddGroupingPolicy(AuthorityName, Group)
 	if !success {
-		return errors.New("存在相同group,添加失败,请联系管理员")
+		return err
 	}
 	return nil
 }
 
 func DeleteRoleForUser(AuthorityName string, Group string) error {
 	e := Casbin()
-	success, _ := e.DeleteRoleForUser(AuthorityName, Group)
+	success, err := e.DeleteRoleForUser(AuthorityName, Group)
 	if !success {
-		return errors.New("不存在该role,添加失败,请联系管理员")
+		return err
 	}
 	return nil
 }
@@ -87,6 +86,7 @@ func Casbin() *casbin.SyncedCachedEnforcer {
 		if err != nil {
 			return
 		}
+		// 禁止直接更新数据库，因为缓存没有更新，会有缓存，db不一致问题
 		syncedCachedEnforcer, _ = casbin.NewSyncedCachedEnforcer(m, a)
 		syncedCachedEnforcer.SetExpireTime(60 * 60) // 设置缓存中的数据过期时间，过期了再从数据库中拿
 		syncedCachedEnforcer.LoadPolicy()           // 加载数据库的策略到变量中
